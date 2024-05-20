@@ -1,12 +1,16 @@
 ## Project Run command
-nodemon index.js
+```bash
+yarn start
+```
+
 
 
 ## Technologies
--   express 
+- express 
 - cors
 - dotenv
 - mongodb
+- nodemon
 
 
 ## Libraries && Packages
