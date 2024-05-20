@@ -28,8 +28,14 @@ async function run() {
         await client.connect();
 
         const serviceCollection = client.db("computerServiceDB").collection("service");
+        const reviewsCollection = client.db("computerServiceDB").collection("reviews");
+        
         app.get("/service", async(req, res) => {
             const result = await serviceCollection.find().toArray();
+            res.send(result);
+        })
+        app.get("/reviews", async(req, res) => {
+            const result = await reviewsCollection.find().toArray();
             res.send(result);
         })
 
