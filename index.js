@@ -29,7 +29,8 @@ async function run() {
 
         const serviceCollection = client.db("computerServiceDB").collection("service");
         const reviewsCollection = client.db("computerServiceDB").collection("reviews");
-        
+        const cartsCollection = client.db("computerServiceDB").collection("carts");
+
         app.get("/service", async(req, res) => {
             const result = await serviceCollection.find().toArray();
             res.send(result);
@@ -39,6 +40,19 @@ async function run() {
             res.send(result);
         })
 
+        // Get carts data find by email
+        app.get("/carts", async(req, res) => {
+            const email = req.query.email;
+            const query = {email: email};
+            const result = await cartsCollection.find(query).toArray();
+            res.send(result);
+        })
+        // Insert a new chart in the chart
+        app.post("/carts", async(req, res) => {
+            const cartItem = req.body
+            const result = await cartsCollection.insertOne(cartItem);
+            res.send(result);
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
