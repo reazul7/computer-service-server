@@ -11,6 +11,7 @@ yarn start
 - dotenv
 - mongodb
 - nodemon
+- JWT token
 
 
 ## Libraries && Packages
