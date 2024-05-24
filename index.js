@@ -119,7 +119,8 @@ async function run() {
             res.send(result);
         })
 
-        // menu related api
+        // --------- menu related api ---------
+        // service api
         app.get("/service", async(req, res) => {
             const result = await serviceCollection.find().toArray();
             res.send(result);
@@ -129,6 +130,14 @@ async function run() {
             const result = await serviceCollection.insertOne(service);
             res.send(result);
         });
+        app.delete("/service/:id", verifyToken, verifyAdmin, async(req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await serviceCollection.deleteOne(query);
+            res.send(result);
+        })
+
+
         app.get("/reviews", async(req, res) => {
             const result = await reviewsCollection.find().toArray();
             res.send(result);
