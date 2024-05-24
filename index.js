@@ -124,6 +124,11 @@ async function run() {
             const result = await serviceCollection.find().toArray();
             res.send(result);
         })
+        app.post("/service", verifyToken, verifyAdmin, async(req, res) => {
+            const service = req.body;
+            const result = await serviceCollection.insertOne(service);
+            res.send(result);
+        });
         app.get("/reviews", async(req, res) => {
             const result = await reviewsCollection.find().toArray();
             res.send(result);
