@@ -27,10 +27,17 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
+        const userCollection = client.db("computerServiceDB").collection("users");
         const serviceCollection = client.db("computerServiceDB").collection("service");
         const reviewsCollection = client.db("computerServiceDB").collection("reviews");
         const cartsCollection = client.db("computerServiceDB").collection("carts");
 
+        // users related api
+        app.post("/users", async (req, res) => {
+            const user = req.body;
+            const result = await userCollection.insertOne(user);
+            res.send(result);
+        })
         app.get("/service", async(req, res) => {
             const result = await serviceCollection.find().toArray();
             res.send(result);
