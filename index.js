@@ -45,6 +45,12 @@ async function run() {
                 res.send({message: "User already exists", insertedId: null});
             }
         })
+        app.get("/users", async(req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
+        
         app.get("/service", async(req, res) => {
             const result = await serviceCollection.find().toArray();
             res.send(result);
