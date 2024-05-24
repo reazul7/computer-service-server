@@ -137,6 +137,29 @@ async function run() {
             res.send(result);
         })
 
+        app.get("/service/:id", async(req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await serviceCollection.findOne(query);
+            res.send(result);
+        })
+        app.patch("/service/:id", async(req, res) => {
+            const item = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    name: item.name,
+                    category: item.category,
+                    price: item.price,
+                    description: item.description,
+                    image: item.image
+                }
+            }
+            const result = await serviceCollection.updateOne(filter, updateDoc);
+            res.send(result);
+        })  
+
 
         app.get("/reviews", async(req, res) => {
             const result = await reviewsCollection.find().toArray();
