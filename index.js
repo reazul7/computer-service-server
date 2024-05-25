@@ -34,6 +34,7 @@ async function run() {
         const serviceCollection = client.db("computerServiceDB").collection("service");
         const reviewsCollection = client.db("computerServiceDB").collection("reviews");
         const cartsCollection = client.db("computerServiceDB").collection("carts");
+        const paymentCollection = client.db("computerServiceDB").collection("payments");
 
         // jwt related api
         app.post("/jwt", async (req, res) => {
@@ -204,6 +205,27 @@ async function run() {
             res.send({
                 clientSecret: paymentIntent.client_secret,
             });
+        })
+
+        // payment related api
+        app.get('/payments/:email', verifyToken, async (req, res) => {
+            const query = { email: req.params.email }
+            if (req.params.email !== req.decode.email) {
+                return res.status(403).send({ message: 'Forbidden Access' });
+            }
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.post('/payments', async (req, res) => {
+            const payment = req.body;
+            const paymentResult = await paymentCollection.insertOne(payment);
+            // delete each item from the cart
+            const query = {
+                _id: { $in: payment.cartIds.map(id => new ObjectId(id)) }
+            };
+            const deleteResult = await cartsCollection.deleteMany(query);
+            res.send({ paymentResult, deleteResult });
         })
 
 
