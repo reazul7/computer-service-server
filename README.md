@@ -12,6 +12,7 @@ yarn start
 - mongodb
 - nodemon
 - JWT token
+- Stripe
 
 
 ## Libraries && Packages
