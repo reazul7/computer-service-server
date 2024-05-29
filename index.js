@@ -74,22 +74,11 @@ async function run() {
         }
 
         // users related api
-        app.post("/users", async (req, res) => {
-            const user = req.body;
-            // insert email if user does not exist
-            const query = { email: user.email };
-            const existingUser = await userCollection.findOne(query);
-            if (!existingUser) {
-                const result = await userCollection.insertOne(user);
-                res.send(result);
-            } else {
-                res.send({ message: "User already exists", insertedId: null });
-            }
-        })
         app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
+
         app.get("/users/admin/:email", verifyToken, async (req, res) => {
             const email = req.params.email;
             if (email !== req.decode.email) {
@@ -102,6 +91,18 @@ async function run() {
                 admin = user?.role === "admin";
             }
             res.send({ admin });
+        })
+
+        app.post("/users", async (req, res) => {
+            const user = req.body;
+            // insert email if user does not exist
+            const query = { email: user.email };
+            const existingUser = await userCollection.findOne(query);
+            if(existingUser) {
+                return res.send({ message: "User already exists", insertedId: null });
+            }
+            const result = await userCollection.insertOne(user);
+            res.send(result);
         })
 
         app.patch("/users/admin/:id", verifyToken, verifyAdmin, async (req, res) => {
@@ -153,10 +154,10 @@ async function run() {
             const updateDoc = {
                 $set: {
                     name: item.name,
+                    description: item.description,
+                    image: item.image,
                     category: item.category,
                     price: item.price,
-                    description: item.description,
-                    image: item.image
                 }
             }
             const result = await serviceCollection.updateOne(filter, updateDoc);
@@ -191,7 +192,7 @@ async function run() {
             res.send(result);
         })
 
-
+        // payment related api
         // payment intent request
         app.post("/create-payment-intent", async (req, res) => {
             const { price } = req.body;
@@ -207,7 +208,6 @@ async function run() {
             });
         })
 
-        // payment related api
         app.get('/payments/:email', verifyToken, async (req, res) => {
             const query = { email: req.params.email }
             if (req.params.email !== req.decode.email) {
@@ -246,6 +246,118 @@ async function run() {
             const revenue = result.length > 0 ? result[0].totalRevenue : 0;
             res.send({users, serviceItems, orders, revenue});
         })
+
+        // using aggregate pipeline
+        app.get("/order-stats", verifyToken, verifyAdmin, async (req, res) => {
+            try {
+                const result = await paymentCollection.aggregate([
+                    {
+                        $unwind: '$serviceIds',
+                    },
+                    {
+                        $addFields: {
+                            serviceIds: {
+                                $convert: {
+                                    input: '$serviceIds',
+                                    to: 'objectId',
+                                    onError: 'null'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        $lookup: {
+                            from: "service",
+                            localField: "serviceIds",
+                            foreignField: "_id",
+                            as: "serviceItems",
+                        }
+                    },
+                    {
+                        $unwind: "$serviceItems"
+                    },
+                    {
+                        $group: {
+                            _id: "$serviceItems.category",
+                            quantity: { $sum: 1 },
+                            revenue: { $sum: "$serviceItems.price" },
+                        }
+                    },
+                    {
+                        $project: {
+                            _id: 0,
+                            category: "$_id",
+                            quantity: "$quantity",
+                            revenue: "$revenue",
+                        }
+                    }
+                ]).toArray();
+                res.send(result);
+            } catch (error) {
+                console.error(error);
+                res.status(500).send("Error fetching order stats");
+            }
+        });
+
+        // app.get("/order-stats", async (req, res) => {
+        //     try {
+        //         const result = await paymentCollection.aggregate([
+        //             {
+        //                 $unwind: '$serviceIds',
+        //             },
+        //             {
+        //                 $lookup: {
+        //                     from: "service",
+        //                     localField: "serviceIds",
+        //                     foreignField: "_id",
+        //                     as: "serviceItems",
+        //                 }
+        //             },
+        //             {
+        //                 $addFields: {
+        //                     serviceIds: {
+        //                         $convert: {
+        //                             input: '$serviceIds',
+        //                             to: 'objectId',
+        //                             onError: 'null'
+        //                         }
+        //                     }
+        //                 }
+        //             },
+        //             {
+        //                 $lookup: {
+        //                     from: "service",
+        //                     localField: "serviceIds",
+        //                     foreignField: "_id",
+        //                     as: "serviceItems",
+        //                 }
+        //             },
+        //             {
+        //                 $unwind: "$serviceItems"
+        //             },
+        //             {
+        //                 $group: {
+        //                     _id: "$serviceItems.category",
+        //                     quantity: { $sum: 1 },
+        //                     revenue: { $sum: "$serviceItems.price" },
+        //                 }
+        //             },
+        //             {
+        //                 $project: {
+        //                     _id: 0,
+        //                     category: "$_id",
+        //                     quantity: "$quantity",
+        //                     revenue: "$revenue",
+        //                 }
+        //             }
+        //         ]).toArray();
+        //         res.send(result);
+        //     } catch (error) {
+        //         console.error(error);
+        //         res.status(500).send("Error fetching order stats");
+        //     }
+        // });
+
 
 
         // Send a ping to confirm a successful connection
