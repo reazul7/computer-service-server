@@ -165,8 +165,30 @@ async function run() {
         })
 
 
+        // reviews api
         app.get("/reviews", async (req, res) => {
             const result = await reviewsCollection.find().toArray();
+            res.send(result);
+        })
+        app.post("/reviews", verifyToken, async (req, res) => {
+            const service = req.body;
+            console.log("service", service)
+            const result = await reviewsCollection.insertOne(service);
+            res.send(result);
+        });
+        // app.get("/reviews/:id", async (req, res) => {
+        //     const id = req.params.id;
+        //     const query = { _id: new ObjectId(id) };
+        //     const result = await reviewsCollection.findOne(query);
+        //     res.send(result);
+        // })
+
+        app.get('/reviews/:email', verifyToken, async (req, res) => {
+            const query = { email: req.params.email }
+            if (req.params.email !== req.decode.email) {
+                return res.status(403).send({ message: 'Forbidden Access' });
+            }
+            const result = await reviewsCollection.find(query).toArray();
             res.send(result);
         })
 
@@ -299,70 +321,10 @@ async function run() {
             }
         });
 
-        // app.get("/order-stats", async (req, res) => {
-        //     try {
-        //         const result = await paymentCollection.aggregate([
-        //             {
-        //                 $unwind: '$serviceIds',
-        //             },
-        //             {
-        //                 $lookup: {
-        //                     from: "service",
-        //                     localField: "serviceIds",
-        //                     foreignField: "_id",
-        //                     as: "serviceItems",
-        //                 }
-        //             },
-        //             {
-        //                 $addFields: {
-        //                     serviceIds: {
-        //                         $convert: {
-        //                             input: '$serviceIds',
-        //                             to: 'objectId',
-        //                             onError: 'null'
-        //                         }
-        //                     }
-        //                 }
-        //             },
-        //             {
-        //                 $lookup: {
-        //                     from: "service",
-        //                     localField: "serviceIds",
-        //                     foreignField: "_id",
-        //                     as: "serviceItems",
-        //                 }
-        //             },
-        //             {
-        //                 $unwind: "$serviceItems"
-        //             },
-        //             {
-        //                 $group: {
-        //                     _id: "$serviceItems.category",
-        //                     quantity: { $sum: 1 },
-        //                     revenue: { $sum: "$serviceItems.price" },
-        //                 }
-        //             },
-        //             {
-        //                 $project: {
-        //                     _id: 0,
-        //                     category: "$_id",
-        //                     quantity: "$quantity",
-        //                     revenue: "$revenue",
-        //                 }
-        //             }
-        //         ]).toArray();
-        //         res.send(result);
-        //     } catch (error) {
-        //         console.error(error);
-        //         res.status(500).send("Error fetching order stats");
-        //     }
-        // });
-
-
 
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        // await client.db("admin").command({ ping: 1 });
+        // console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
         // await client.close();
