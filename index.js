@@ -98,7 +98,7 @@ async function run() {
             // insert email if user does not exist
             const query = { email: user.email };
             const existingUser = await userCollection.findOne(query);
-            if(existingUser) {
+            if (existingUser) {
                 return res.send({ message: "User already exists", insertedId: null });
             }
             const result = await userCollection.insertOne(user);
@@ -170,18 +170,13 @@ async function run() {
             const result = await reviewsCollection.find().toArray();
             res.send(result);
         })
+
         app.post("/reviews", verifyToken, async (req, res) => {
             const service = req.body;
             console.log("service", service)
             const result = await reviewsCollection.insertOne(service);
             res.send(result);
         });
-        // app.get("/reviews/:id", async (req, res) => {
-        //     const id = req.params.id;
-        //     const query = { _id: new ObjectId(id) };
-        //     const result = await reviewsCollection.findOne(query);
-        //     res.send(result);
-        // })
 
         app.get('/reviews/:email', verifyToken, async (req, res) => {
             const query = { email: req.params.email }
@@ -266,7 +261,7 @@ async function run() {
                 }
             ]).toArray();
             const revenue = result.length > 0 ? result[0].totalRevenue : 0;
-            res.send({users, serviceItems, orders, revenue});
+            res.send({ users, serviceItems, orders, revenue });
         })
 
         // using aggregate pipeline
