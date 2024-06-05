@@ -1,7 +1,3 @@
-## Project Run command
-```bash
-yarn start
-```
 <h1 align="center">
   <br>
   <!-- <a href="#"><img src="https://...png" alt="..." width="200"></a> -->
